@@ -1,0 +1,29 @@
+{
+  "name": "quaver.bot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Swan/Quaver.Bot.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Swan/Quaver.Bot/issues"
+  },
+  "homepage": "https://github.com/Swan/Quaver.Bot#readme",
+  "dependencies": {
+    "@types/chalk": "^2.2.0",
+    "@types/express": "^4.17.7",
+    "@types/mysql": "^2.15.15",
+    "body-parser": "^1.19.0",
+    "chalk": "^4.1.0",
+    "discord.js": "^12.3.1",
+    "express": "^4.17.1",
+    "mysql2": "^2.1.0"
+  }
+}

@@ -1,0 +1,16 @@
+{
+    "port": 8069,
+    "bot": {
+        "id": "",
+        "token": "",
+        "roleId": "",
+        "generalChannelId": ""
+    },
+    "databaseSql": {
+        "host": "",
+        "user": "",
+        "password": "",
+        "database": "",
+        "connectionLimit": 10
+    }
+}
