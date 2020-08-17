@@ -13,7 +13,7 @@ export default class Router {
         router.route("/donator/add").post(Donator.AddPOST);
         router.route("/donator/remove").post(Donator.RemovePOST);
 
-        router.route("*").get((req, res) => res.json(404).json({ error: 404, message: "Nothing was found here" }));
+        router.route("*").get((req, res) => res.status(404).json({ error: 404, message: "Nothing was found here" }));
 
         return router;
     };
