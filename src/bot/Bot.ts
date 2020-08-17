@@ -1,5 +1,6 @@
 import * as Discord from "discord.js";
 import Logger from "../logging/Logger";
+import SqlDatabase from "../database/SqlDatabase";
 const config = require("../config/config.json");
 
 export default class Bot {
@@ -16,6 +17,7 @@ export default class Bot {
             return Logger.Error(`Discord donator 'roleId' is not set in config.`);
             
         await Bot.Client.login(config.bot.token);
+        Bot.StartWorkerTask();
     }
 
     /**
@@ -110,6 +112,48 @@ export default class Bot {
         } catch (err) {
             Logger.Error(err);
             return null;
+        }
+    }
+
+    /**
+     * Periodically, the bot will perform checks to make sure people that have the donator role
+     * should.
+     */
+    private static StartWorkerTask(): void {
+        setInterval(async () => {
+            await Bot.RemoveExpiredUserDonatorRole();
+        }, 10000);
+    }
+
+    /**
+     * Removes the donator role from users who have had their time expired.
+     */
+    private static async RemoveExpiredUserDonatorRole(): Promise<void> {
+        try {
+            // Get all users who have the donator role
+            const role = await Bot.GetDonatorRole();
+
+            role.members.map(async (user: any) => { 
+                const result = await SqlDatabase.Execute("SELECT id, donator_end_time, usergroups FROM users WHERE discord_id = ? LIMIT 1", [user.id]);
+
+                // Couldn't find user, so remove them from the database.
+                if (result.length == 0) {
+                    await user.roles.remove(role);
+                    Logger.Success(`Removed donator role from user: ${user.id} because their Discord is no longer linked`);
+                    return;
+                }
+
+                const dbUser = result[0];
+                const time = Math.round((new Date()).getTime());
+                
+                if (time < dbUser.donator_end_time)
+                    return;
+
+                await user.roles.remove(role);
+                Logger.Success(`Removed donator role from user: ${user.id} because their donator has expired.`);
+            });
+        } catch (err) {
+            Logger.Error(err);
         }
     }
 }
