@@ -1,5 +1,6 @@
 {
-    "port": 8069,
+    "port": 8065,
+    "secretKey": "",
     "bot": {
         "id": "",
         "token": "",
