@@ -147,8 +147,6 @@ export default class Bot {
                     const dbUser = result[0];
                     const time = Math.round((new Date()).getTime());
                     
-                    Logger.Info(time + " " + dbUser.donator_end_time);
-
                     if (time < dbUser.donator_end_time && dbUser.donator_end_time != 0)
                         return;
 
