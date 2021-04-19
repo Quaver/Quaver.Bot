@@ -132,25 +132,31 @@ export default class Bot {
         try {
             // Get all users who have the donator role
             const role = await Bot.GetDonatorRole();
-
+            
             role.members.map(async (user: any) => { 
-                const result = await SqlDatabase.Execute("SELECT id, donator_end_time, usergroups FROM users WHERE discord_id = ? LIMIT 1", [user.id]);
+                try {
+                    const result = await SqlDatabase.Execute("SELECT id, donator_end_time, usergroups FROM users WHERE discord_id = ? LIMIT 1", [user.id]);
 
-                // Couldn't find user, so remove them from the database.
-                if (result.length == 0) {
+                    // Couldn't find user, so remove them from the database.
+                    if (result.length == 0) {
+                        await user.roles.remove(role);
+                        Logger.Success(`Removed donator role from user: ${user.id} because their Discord is no longer linked`);
+                        return;
+                    }
+
+                    const dbUser = result[0];
+                    const time = Math.round((new Date()).getTime());
+                    
+                    Logger.Info(time + " " + dbUser.donator_end_time);
+
+                    if (time < dbUser.donator_end_time && dbUser.donator_end_time != 0)
+                        return;
+
                     await user.roles.remove(role);
-                    Logger.Success(`Removed donator role from user: ${user.id} because their Discord is no longer linked`);
-                    return;
+                    Logger.Success(`Removed donator role from user: ${user.id} because their donator has expired.`);
+                } catch (err) {
+                    Logger.Error(err);
                 }
-
-                const dbUser = result[0];
-                const time = Math.round((new Date()).getTime());
-                
-                if (time < dbUser.donator_end_time && dbUser.donator_end_time != 0)
-                    return;
-
-                await user.roles.remove(role);
-                Logger.Success(`Removed donator role from user: ${user.id} because their donator has expired.`);
             });
         } catch (err) {
             Logger.Error(err);
