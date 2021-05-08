@@ -18,6 +18,7 @@ export default class Bot {
             
         await Bot.Client.login(config.bot.token);
         Bot.StartWorkerTask();
+        Bot.WatchMessages();
     }
 
     /**
@@ -123,6 +124,18 @@ export default class Bot {
         setInterval(async () => {
             await Bot.RemoveExpiredUserDonatorRole();
         }, 10000);
+    }
+
+    /**
+     * On message
+     */
+    private static WatchMessages(): void {
+        Bot.Client.on('message', message => {
+            if(message.author.bot && config.webhookIdsReaction.includes(message.author.id)) {
+                message.react("👍");
+                message.react("👎");
+            }
+        });
     }
 
     /**
