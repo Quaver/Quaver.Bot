@@ -134,6 +134,7 @@ export default class Bot {
             if(message.author.bot && config.webhookIdsReaction.includes(message.author.id)) {
                 message.react("👍");
                 message.react("👎");
+                message.react("❓");
             }
         });
     }
