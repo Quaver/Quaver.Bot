@@ -142,9 +142,9 @@ export default class Bot {
                         const description = embed.description?.toLowerCase();
 
                         if((title && title.includes("nitro") && title.includes("free"))
-                        || (description && description.includes("nitro") && description.includes("free"))) {
+                            || (description && description.includes("nitro") && description.includes("free"))) {
                             message.delete().then(r => {
-                                Bot.Client.channels.cache.get(config.logChannelId).send(`${message.author.tag} posted scam message.`);
+                                Bot.Client.channels.cache.get(config.logChannelId).send(`<@${message.author.id}> posted scam message, it was deleted.`);
                                 Logger.Warning(`Scam message was deleted! ${embed.url}`);
                             });
                         }
