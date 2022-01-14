@@ -19,7 +19,6 @@ export default class Bot {
         await Bot.Client.login(config.bot.token);
         Bot.StartWorkerTask();
         Bot.WatchMessages();
-        Bot.WatchDeletedMessages();
     }
 
     /**
@@ -145,8 +144,7 @@ export default class Bot {
                         if((title && title.includes("nitro") && title.includes("free"))
                         || (description && description.includes("nitro") && description.includes("free"))) {
                             message.delete().then(r => {
-                                Bot.Client.channels.cache.get(config.logChannelId)
-                                    .send(`${message.author.tag} posted scam message.`);
+                                Bot.Client.channels.cache.get(config.logChannelId).send(`${message.author.tag} posted scam message.`);
                                 Logger.Warning(`Scam message was deleted! ${embed.url}`);
                             });
                         }
@@ -154,17 +152,6 @@ export default class Bot {
                 }
             }
         });
-    }
-
-    private static WatchDeletedMessages(): void {
-        if(config.logChannelId) {
-            Bot.Client.on('messageDelete', message => {
-                if(config.logChannelId !== message.channel.id && !message.embeds.length) {
-                    Bot.Client.channels.cache.get(config.logChannelId)
-                        .send(`\`\`\`${message.content}\`\`\` was deleted by ${message.author?.tag} - ${message.author?.id}`);
-                }
-            });
-        }
     }
 
     /**
