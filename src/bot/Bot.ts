@@ -8,14 +8,14 @@ export default class Bot {
      * The client hused to interact with Discord.
      */
     public static Client: Discord.Client = new Discord.Client();
-    
+
     /**
      * Initializes the Discord bot and logs it in
      */
     public static async Initialize(): Promise<void> {
         if (!config.bot.roleId)
             return Logger.Error(`Discord donator 'roleId' is not set in config.`);
-            
+
         await Bot.Client.login(config.bot.token);
         Bot.StartWorkerTask();
         Bot.WatchMessages();
@@ -23,20 +23,20 @@ export default class Bot {
 
     /**
      * Gives the donator role to a Discord user
-     * @param id 
+     * @param id
      */
     public static async GiveDonatorRole(id: any): Promise<void> {
         try {
             const user = await Bot.GetDiscordUser(id);
 
-            if (user == null) 
+            if (user == null)
                 return Logger.Warning(`Tried to give donator role to user: ${id}, but they are not in the server.`);
 
             const role = await Bot.GetDonatorRole();
 
             if (!role)
                 return Logger.Warning(`Tried to give donator role to user: ${id}, but the role does not exist in the cache.`);
-            
+
             await user.roles.add(role);
             Logger.Success(`Successfully added donator role to: ${id}!`);
         } catch (err) {
@@ -46,20 +46,20 @@ export default class Bot {
 
     /**
      * Removes the donator role from a Discord user
-     * @param id 
+     * @param id
      */
     public static async RemoveDonatorRole(id: any): Promise<void> {
         try {
             const user = await Bot.GetDiscordUser(id);
 
-            if (user == null) 
+            if (user == null)
                 return Logger.Warning(`Tried to remove donator role from user: ${id}, but they are not in the server.`);
 
             const role = await Bot.GetDonatorRole();
 
             if (!role)
                 return Logger.Warning(`Tried to remove donator role from user: ${id}, but the role does not exist in the cache.`);
-            
+
             await user.roles.remove(role);
             Logger.Success(`Successfully removed donator role from: ${id}!`);
         } catch (err) {
@@ -69,12 +69,12 @@ export default class Bot {
 
     /**
      * Gets a Discord user at a particular id in the server.
-     * @param id 
+     * @param id
      */
     public static async GetDiscordUser(id: any): Promise<any> {
         try {
             const chan: any = await Bot.GetGuild();
-    
+
             const member = chan.member(id);
             return member;
         } catch(err) {
@@ -92,7 +92,7 @@ export default class Bot {
 
             if (!chan)
                 return null;
-    
+
             return chan.guild;
 
         } catch (err) {
@@ -135,6 +135,21 @@ export default class Bot {
                 message.react("👍");
                 message.react("👎");
                 message.react("❓");
+            } else {
+                if(message.embeds && message.author.id !== config.bot.id) {
+                    for(const embed of message.embeds) {
+                        const title = embed.title?.toLowerCase();
+                        const description = embed.description?.toLowerCase();
+
+                        if((title && title.includes("nitro") && title.includes("free"))
+                            || (description && description.includes("nitro") && description.includes("free"))) {
+                            message.delete().then(r => {
+                                Bot.Client.channels.cache.get(config.logChannelId).send(`<@${message.author.id}> posted scam message, it was deleted.`);
+                                Logger.Warning(`Scam message was deleted! ${embed.url}`);
+                            });
+                        }
+                    }
+                }
             }
         });
     }
@@ -146,8 +161,8 @@ export default class Bot {
         try {
             // Get all users who have the donator role
             const role = await Bot.GetDonatorRole();
-            
-            role.members.map(async (user: any) => { 
+
+            role.members.map(async (user: any) => {
                 try {
                     const result = await SqlDatabase.Execute("SELECT id, donator_end_time, usergroups FROM users WHERE discord_id = ? LIMIT 1", [user.id]);
 
@@ -160,7 +175,7 @@ export default class Bot {
 
                     const dbUser = result[0];
                     const time = Math.round((new Date()).getTime());
-                    
+
                     if (time < dbUser.donator_end_time && dbUser.donator_end_time != 0)
                         return;
 

@@ -14,5 +14,6 @@
         "database": "",
         "connectionLimit": 10
     },
-    "webhookIdsReaction": []
+    "webhookIdsReaction": [],
+    "logChannelId": ""
 }
