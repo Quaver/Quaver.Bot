@@ -127,6 +127,50 @@ export default class Bot {
     }
 
     /**
+     *
+     * Checks if string contains banned word
+     *
+     * @param text
+     * @constructor
+     * @private
+     */
+    private static VerifyMessageContent(text: string): boolean {
+        const regex = /https?:\/\/(.*).gift/;
+        const bannedWords = [
+            "gifted", "nitro"
+        ];
+
+        for (const word of bannedWords) {
+            if (text.includes(word)) return true;
+        }
+
+        // If the check fails verify the url
+        if (text.includes("http") && regex.test(text)) {
+            const groups = regex.exec(text);
+            if(groups && groups[1] !== "discord") return true;
+        }
+
+        return false;
+    }
+
+    /**
+     *
+     *  Deleted message with custom text response
+     *
+     * @param message
+     * @param text
+     * @constructor
+     * @private
+     */
+    private static DeleteMessage(message: any, text: string = "message was deleted!"): void {
+        let msg = `<@${message.author.id}> ${text}`
+        message.delete().then(r => {
+            // @ts-ignore
+            Bot.Client.channels.cache.get(config.logChannelId).send(msg);
+        });
+    }
+
+    /**
      * On message
      */
     private static WatchMessages(): void {
@@ -136,17 +180,23 @@ export default class Bot {
                 message.react("👎");
                 message.react("❓");
             } else {
-                if(message.embeds && message.author.id !== config.bot.id) {
-                    for(const embed of message.embeds) {
-                        const title = embed.title?.toLowerCase();
-                        const description = embed.description?.toLowerCase();
+                const content = message.content;
 
-                        if((title && title.includes("nitro") && title.includes("free"))
-                            || (description && description.includes("nitro") && description.includes("free"))) {
-                            message.delete().then(r => {
-                                Bot.Client.channels.cache.get(config.logChannelId).send(`<@${message.author.id}> posted scam message, it was deleted.`);
-                                Logger.Warning(`Scam message was deleted! ${embed.url}`);
-                            });
+                // Check content first
+                if(this.VerifyMessageContent(content)) {
+                    this.DeleteMessage(message, "posted scam message, it was deleted!");
+                    Logger.Warning(`Scam message was deleted!`);
+                } else {
+                    // If its embed check title and description
+                    if(message.embeds.length) {
+                        for(const embed of message.embeds) {
+                            const title = embed.title?.toLowerCase();
+                            const description = embed.description?.toLowerCase();
+
+                            if(this.VerifyMessageContent(title) || this.VerifyMessageContent(description)) {
+                                this.DeleteMessage(message, "posted scam embed, it was deleted!");
+                                Logger.Warning(`Scam embed was deleted!`);
+                            }
                         }
                     }
                 }
