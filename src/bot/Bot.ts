@@ -134,14 +134,16 @@ export default class Bot {
      * @constructor
      * @private
      */
-    private static VerifyMessageContent(text: string): boolean {
+    private static VerifyMessageContent(text: string, embed: boolean = false): boolean {
         const regex = /https?:\/\/(.*).gift/;
         const bannedWords = [
             "gifted", "nitro"
         ];
 
-        for (const word of bannedWords) {
-            if (text.includes(word)) return true;
+        if(embed) {
+            for (const word of bannedWords) {
+                if (text.includes(word)) return true;
+            }
         }
 
         // If the check fails verify the url
@@ -193,7 +195,7 @@ export default class Bot {
                             const title = embed.title?.toLowerCase();
                             const description = embed.description?.toLowerCase();
 
-                            if(this.VerifyMessageContent(title) || this.VerifyMessageContent(description)) {
+                            if(this.VerifyMessageContent(title, true) || this.VerifyMessageContent(description, true)) {
                                 this.DeleteMessage(message, "posted scam embed, it was deleted!");
                                 Logger.Warning(`Scam embed was deleted!`);
                             }
