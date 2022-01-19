@@ -213,21 +213,14 @@ export default class Bot {
                     // Keep the last 6 mutes
                     history = history.slice(Math.max(history.length - 6, 0));
 
-                    let fields = [];
+                    let generatedMsg = "**Previous mutes:**\n";
 
-                    for (const id in history) {
-                        fields.push({
-                            name: `Mute #${id}`,
-                            value: history[id]
-                        });
+                    for (const msg of history) {
+                        const duration = msg.split(" ")[0];
+                        generatedMsg += `**Duration:** ${duration} - **Reason:** ${msg.replace(duration, "")}\n`;
                     }
 
-                    const embed = new Discord.MessageEmbed()
-                        .setTitle(`Mute history`)
-                        .setDescription('Last 6 mutes')
-                        .addFields(fields);
-
-                    message.channel.send({ embed: embed })
+                    message.channel.send(generatedMsg);
                 } else {
                     message.channel.send("User has no history!");
                 }
