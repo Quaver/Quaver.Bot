@@ -2,6 +2,8 @@ import * as Discord from "discord.js";
 import Logger from "../logging/Logger";
 import SqlDatabase from "../database/SqlDatabase";
 const config = require("../config/config.json");
+const JSONdb = require('simple-json-db');
+const dbMuteHistory = new JSONdb('./mute-history.json');
 
 export default class Bot {
     /**
@@ -140,19 +142,140 @@ export default class Bot {
             "gifted", "nitro"
         ];
 
-        if(embed) {
+        if (text && embed) {
             for (const word of bannedWords) {
                 if (text.includes(word)) return true;
             }
         }
 
-        // If the check fails verify the url
-        if (text.includes("http") && regex.test(text)) {
+        // Verify .gift urls
+        if (text && text.includes("http") && regex.test(text)) {
             const groups = regex.exec(text);
             if(groups && groups[1] !== "discord") return true;
         }
 
         return false;
+    }
+
+    /**
+     *
+     * Watch mee6 !mute and !tempmute commands and save duration and reason
+     *
+     * @param message
+     * @constructor
+     * @private
+     */
+    private static Mute(message: any): void {
+        const regex = /^!(mute|tempmute)? ([<@!?]*&*([0-9]+)>?) (.*)/;
+        const content = message.content;
+
+        if(content && regex.test(content)) {
+            const groups = regex.exec(content);
+
+            if(groups.length === 5) {
+                const discordId = groups[3];
+                const reason = groups[4].trim();
+
+                if(reason) {
+                    if(dbMuteHistory.has(discordId)) {
+                        let previousWarns = dbMuteHistory.get(discordId);
+                        previousWarns.push(reason);
+                        dbMuteHistory.set(discordId, previousWarns);
+                    } else {
+                        dbMuteHistory.set(discordId, [reason]);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Command !history {discord_id}
+     *
+     * Returns all previous mutes user had
+     *
+     * @param message
+     * @constructor
+     * @private
+     */
+    private static History(message: any): void {
+        const regex = /^!history? ([<@!?]*&*([0-9]+)>?)/;
+        const content = message.content;
+
+        if(content && regex.test(content)) {
+            const groups = regex.exec(content);
+
+            if(groups.length) {
+                const discordId = groups[2];
+
+                if (dbMuteHistory.has(discordId)) {
+                    let history = dbMuteHistory.get(discordId);
+                    // Keep the last 6 mutes
+                    history = history.slice(Math.max(history.length - 6, 0));
+
+                    let fields = [];
+
+                    for (const id in history) {
+                        fields.push({
+                            name: `Mute #${id}`,
+                            value: history[id]
+                        });
+                    }
+
+                    const embed = new Discord.MessageEmbed()
+                        .setTitle(`Mute history`)
+                        .setDescription('Last 6 mutes')
+                        .addFields(fields);
+
+                    message.channel.send({ embed: embed })
+                } else {
+                    message.channel.send("User has no history!");
+                }
+            }
+        }
+    }
+
+    /**
+     *
+     * Give action reactions
+     *
+     * @param message
+     * @constructor
+     * @private
+     */
+    private static MessageReactions(message: any) {
+        if(message.author.bot && config.webhookIdsReaction.includes(message.author.id)) {
+            message.react("👍");
+            message.react("👎");
+            message.react("❓");
+        }
+    }
+
+    /**
+     *
+     * Scan message for scam
+     *
+     * @param message
+     * @constructor
+     * @private
+     */
+    private static Scam(message: any): void {
+        // Check content first
+        if(this.VerifyMessageContent(message.content)) {
+            this.DeleteMessage(message, "posted scam message, it was deleted!");
+        } else {
+            // If its embed check title and description
+            if(message.embeds.length) {
+                for(const embed of message.embeds) {
+                    const title = embed.title?.toLowerCase();
+                    const description = embed.description?.toLowerCase();
+
+                    if(this.VerifyMessageContent(title, true) || this.VerifyMessageContent(description, true)) {
+                        this.DeleteMessage(message, "posted scam embed, it was deleted!");
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -177,32 +300,10 @@ export default class Bot {
      */
     private static WatchMessages(): void {
         Bot.Client.on('message', message => {
-            if(message.author.bot && config.webhookIdsReaction.includes(message.author.id)) {
-                message.react("👍");
-                message.react("👎");
-                message.react("❓");
-            } else {
-                const content = message.content;
-
-                // Check content first
-                if(this.VerifyMessageContent(content)) {
-                    this.DeleteMessage(message, "posted scam message, it was deleted!");
-                    Logger.Warning(`Scam message was deleted!`);
-                } else {
-                    // If its embed check title and description
-                    if(message.embeds.length) {
-                        for(const embed of message.embeds) {
-                            const title = embed.title?.toLowerCase();
-                            const description = embed.description?.toLowerCase();
-
-                            if(this.VerifyMessageContent(title, true) || this.VerifyMessageContent(description, true)) {
-                                this.DeleteMessage(message, "posted scam embed, it was deleted!");
-                                Logger.Warning(`Scam embed was deleted!`);
-                            }
-                        }
-                    }
-                }
-            }
+            Bot.MessageReactions(message);
+            Bot.Mute(message);
+            Bot.History(message);
+            Bot.Scam(message);
         });
     }
 
