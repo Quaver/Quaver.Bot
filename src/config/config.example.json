@@ -5,7 +5,8 @@
         "id": "",
         "token": "",
         "roleId": "",
-        "generalChannelId": ""
+        "generalChannelId": "",
+        "membershipRoleId": ""
     },
     "databaseSql": {
         "host": "",
@@ -15,5 +16,8 @@
         "connectionLimit": 10
     },
     "webhookIdsReaction": [],
-    "logChannelId": ""
+    "channels": {
+        "logMembership": "",
+        "logDeletedMessages": "",
+    }
 }

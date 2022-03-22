@@ -21,6 +21,7 @@ export default class Bot {
         await Bot.Client.login(config.bot.token);
         Bot.StartWorkerTask();
         Bot.WatchMessages();
+        Bot.MemberUpdate();
     }
 
     /**
@@ -284,7 +285,7 @@ export default class Bot {
         let msg = `<@${message.author.id}> ${text}`
         message.delete().then(r => {
             // @ts-ignore
-            Bot.Client.channels.cache.get(config.logChannelId).send(msg);
+            Bot.Client.channels.cache.get(config.channels.logDeletedMessages).send(msg);
         });
     }
 
@@ -297,6 +298,32 @@ export default class Bot {
             Bot.Mute(message);
             Bot.History(message);
             Bot.Scam(message);
+        });
+    }
+
+    private static MemberUpdate(): void {
+        Bot.Client.on('guildMemberUpdate', (oldMember: any, newMember: any) => {
+            let oldMemberRoleIDs = [], newMemberRoleIDs = [];
+            // Save old and new role ids
+            oldMember.roles.cache.each(role => {
+                oldMemberRoleIDs.push(role.id);
+            });
+            newMember.roles.cache.each(role => {
+                newMemberRoleIDs.push(role.id);
+            });
+
+            // Check if member got new role
+            if (oldMemberRoleIDs.length < newMemberRoleIDs.length) {
+                // Check if member already had membership role
+                if (!oldMemberRoleIDs.includes(config.bot.membershipRoleId)) {
+                    // Check if member has got membership role
+                    if (newMemberRoleIDs.includes(config.bot.membershipRoleId)) {
+                        const generateMsg = `<@${newMember.user.id}> bought membership!`;
+                        // Announce it in log membership channel
+                        Bot.Client.channels.cache.get(config.channels.logMembership).send(generateMsg);
+                    }
+                }
+            }
         });
     }
 
