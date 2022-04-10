@@ -12,6 +12,7 @@ export default class Router {
 
         router.route("/donator/add").post(Donator.AddPOST);
         router.route("/donator/remove").post(Donator.RemovePOST);
+        router.route("/donator/discord/check/:id").get(Donator.UserHasDiscordPremiumGET);
 
         router.route("*").get((req, res) => res.status(404).json({ error: 404, message: "Nothing was found here" }));
 
