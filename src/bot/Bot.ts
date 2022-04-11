@@ -125,12 +125,16 @@ export default class Bot {
         if (user == null)
             return false;
 
+        let hasMembershipRole = false;
+
         user.roles.cache.each(role => {
-            if (role.id == config.bot.membershipRoleId)
-                return true;
+            if (role.id == config.bot.membershipRoleId) {
+                hasMembershipRole = true;
+                return;
+            }
         });
 
-        return false;
+        return hasMembershipRole;
     }
     /**
      * Periodically, the bot will perform checks to make sure people that have the donator role
