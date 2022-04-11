@@ -119,23 +119,6 @@ export default class Bot {
         }
     }
 
-    public static async HasPremiumMembership(id: any): Promise<boolean> {
-        const user = await Bot.GetDiscordUser(id);
-
-        if (user == null)
-            return false;
-
-        let hasMembershipRole = false;
-
-        user.roles.cache.each(role => {
-            if (role.id == config.bot.membershipRoleId) {
-                hasMembershipRole = true;
-                return;
-            }
-        });
-
-        return hasMembershipRole;
-    }
     /**
      * Periodically, the bot will perform checks to make sure people that have the donator role
      * should.
@@ -354,12 +337,6 @@ export default class Bot {
 
             role.members.map(async (user: any) => {
                 try {
-                    // Give role to user if they have a premium membership
-                    if (await Bot.HasPremiumMembership(user.id)) {
-                        await user.roles.add(role);
-                        return;
-                    }
-               
                     const result = await SqlDatabase.Execute("SELECT id, donator_end_time, usergroups FROM users WHERE discord_id = ? LIMIT 1", [user.id]);
 
                     // Couldn't find user, so remove them from the database.
