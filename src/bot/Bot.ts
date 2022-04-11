@@ -350,18 +350,18 @@ export default class Bot {
 
             role.members.map(async (user: any) => {
                 try {
+                    // Give role to user if they have a premium membership
+                    if (await Bot.HasPremiumMembership(user.id)) {
+                        await user.roles.add(role);
+                        return;
+                    }
+               
                     const result = await SqlDatabase.Execute("SELECT id, donator_end_time, usergroups FROM users WHERE discord_id = ? LIMIT 1", [user.id]);
 
                     // Couldn't find user, so remove them from the database.
                     if (result.length == 0) {
                         await user.roles.remove(role);
                         Logger.Success(`Removed donator role from user: ${user.id} because their Discord is no longer linked`);
-                        return;
-                    }
-
-                    // Give role to user if they have a premium membership
-                    if (await Bot.HasPremiumMembership(user.id)) {
-                        await user.roles.add(role);
                         return;
                     }
 
