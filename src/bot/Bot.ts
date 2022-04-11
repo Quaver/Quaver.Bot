@@ -119,6 +119,19 @@ export default class Bot {
         }
     }
 
+    public static async HasPremiumMembership(id: any): Promise<boolean> {
+        const user = await Bot.GetDiscordUser(id);
+
+        if (user == null)
+            return false;
+
+        user.roles.cache.each(role => {
+            if (role.id == config.bot.membershipRoleId)
+                return true;
+        });
+
+        return false;
+    }
     /**
      * Periodically, the bot will perform checks to make sure people that have the donator role
      * should.
@@ -343,6 +356,12 @@ export default class Bot {
                     if (result.length == 0) {
                         await user.roles.remove(role);
                         Logger.Success(`Removed donator role from user: ${user.id} because their Discord is no longer linked`);
+                        return;
+                    }
+
+                    // Give role to user if they have a premium membership
+                    if (await Bot.HasPremiumMembership(user.id)) {
+                        await user.roles.add(role);
                         return;
                     }
 
