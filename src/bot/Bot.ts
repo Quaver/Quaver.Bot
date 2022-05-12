@@ -337,6 +337,18 @@ export default class Bot {
 
             role.members.map(async (user: any) => {
                 try {
+                    let hasDonator = false;
+        
+                    user.roles.cache.each(role => {
+                        if (role.id == config.bot.membershipRoleId) {
+                            hasDonator = true;
+                            return;
+                        }
+                    });
+
+                    if (hasDonator)
+                        return true;
+
                     const result = await SqlDatabase.Execute("SELECT id, donator_end_time, usergroups FROM users WHERE discord_id = ? LIMIT 1", [user.id]);
 
                     // Couldn't find user, so remove them from the database.
