@@ -167,6 +167,9 @@ export default class Bot {
      * @private
      */
     private static Mute(message: any): void {
+        if(!this.HasPermission(message.member))
+            return;
+
         const regex = /^!(mute|tempmute)? ([<@!?]*&*([0-9]+)>?) (.*)/;
         const content = message.content;
 
@@ -200,6 +203,9 @@ export default class Bot {
      * @private
      */
     private static History(message: any): void {
+        if(!this.HasPermission(message.member))
+            return;
+
         const regex = /^!history? ([<@!?]*&*([0-9]+)>?)/;
         const content = message.content;
 
@@ -227,6 +233,17 @@ export default class Bot {
                 }
             }
         }
+    }
+
+    /**
+     *
+     * Check if member has permission to use command
+     *
+     */
+
+    private static HasPermission(member: any) {
+        if (member.permissions.has(Discord.Permissions.FLAGS.MANAGE_MESSAGES)) return true;
+        return false;
     }
 
     /**
