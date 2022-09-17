@@ -242,8 +242,12 @@ export default class Bot {
      */
 
     private static HasPermission(member: any) {
-        if (member.permissions.has(Discord.Permissions.FLAGS.MANAGE_MESSAGES)) return true;
-        return false;
+        try {
+            if (member.permissions.has(Discord.Permissions.FLAGS.MANAGE_MESSAGES)) return true;
+            return false;
+        } catch (e) {
+            return false;
+        }
     }
 
     /**
