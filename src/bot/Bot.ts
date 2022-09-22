@@ -7,7 +7,7 @@ const dbMuteHistory = new JSONdb('./mute-history.json');
 
 export default class Bot {
     /**
-     * The client hused to interact with Discord.
+     * The client used to interact with Discord.
      */
     public static Client: Discord.Client = new Discord.Client();
 
@@ -19,9 +19,14 @@ export default class Bot {
             return Logger.Error(`Discord donator 'roleId' is not set in config.`);
 
         await Bot.Client.login(config.bot.token);
-        Bot.StartWorkerTask();
-        Bot.WatchMessages();
-        Bot.MemberUpdate();
+
+        Bot.Client.on('ready', () => {
+            console.log(`Logged in!`);
+
+            Bot.StartWorkerTask();
+            Bot.WatchMessages();
+            Bot.MemberUpdate();
+        });
     }
 
     /**
@@ -318,7 +323,7 @@ export default class Bot {
             Bot.MessageReactions(message);
             Bot.Mute(message);
             Bot.History(message);
-            Bot.Scam(message);
+            //Bot.Scam(message);
         });
     }
 
