@@ -6,7 +6,10 @@
         "token": "",
         "roleId": "",
         "generalChannelId": "",
-        "membershipRoleId": ""
+        "membershipRoleId": "",
+        "shopMembershipRoles": {
+            "role_id": "role name"
+        }
     },
     "databaseSql": {
         "host": "",
@@ -18,6 +21,6 @@
     "webhookIdsReaction": [],
     "channels": {
         "logMembership": "",
-        "logDeletedMessages": "",
+        "logDeletedMessages": ""
     }
 }
