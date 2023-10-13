@@ -372,7 +372,6 @@ export default class Bot {
                         }
                     }
                 });
-                // if(newMemberRoleIDs.includes())
             }
         });
     }
