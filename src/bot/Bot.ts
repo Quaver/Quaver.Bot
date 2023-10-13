@@ -358,6 +358,21 @@ export default class Bot {
                         Bot.Client.channels.cache.get(config.channels.logMembership).send(generateMsg);
                     }
                 }
+
+                // Check if member bought shop membership
+                const shopMembershipRoleIds = Object.keys(config.bot.shopMembershipRoles);
+                shopMembershipRoleIds.forEach(roleId => {
+                    // Check if member already had the role
+                    if (!oldMemberRoleIDs.includes(roleId)) { 
+                        // If member has this role
+                        if (newMemberRoleIDs.includes(roleId)) {
+                            const generateMsg = `<@${newMember.user.id}> bought ${config.bot.shopMembershipRoles[roleId]}!`;
+                            // Announce it in log membership channel
+                            Bot.Client.channels.cache.get(config.channels.logMembership).send(generateMsg);
+                        }
+                    }
+                });
+                // if(newMemberRoleIDs.includes())
             }
         });
     }
