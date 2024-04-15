@@ -282,33 +282,6 @@ export default class Bot {
 
     /**
      *
-     * Scan message for scam
-     *
-     * @param message
-     * @constructor
-     * @private
-     */
-    private static Scam(message: any): void {
-        // Check content first
-        if(this.VerifyMessageContent(message.content)) {
-            this.DeleteMessage(message, "posted scam message, it was deleted!");
-        } else {
-            // If its embed check title and description
-            if(message.embeds.length) {
-                for(const embed of message.embeds) {
-                    const title = embed.title?.toLowerCase();
-                    const description = embed.description?.toLowerCase();
-
-                    if(this.VerifyMessageContent(title, true) || this.VerifyMessageContent(description, true)) {
-                        this.DeleteMessage(message, "posted scam embed, it was deleted!");
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     *
      *  Deleted message with custom text response
      *
      * @param message
@@ -332,8 +305,29 @@ export default class Bot {
             Bot.MessageReactions(message);
             Bot.Mute(message);
             Bot.History(message);
-            //Bot.Scam(message);
         });
+
+        // Use raw to check if message is poll and delete it if they don't have manage_channel permission
+        Bot.Client.on('raw', async packet => {
+            if (!['MESSAGE_CREATE'].includes(packet.t)) return;
+
+            const { d: data } = packet;
+            const channel = Bot.Client.channels.cache.get(data.channel_id);
+            const guild = Bot.Client.guilds.cache.get(data.guild_id);
+
+            if (!channel || !guild) return;
+
+            const member = await guild.members.fetch(data.author.id);
+
+            if(this.HasPermission(member))
+                return;
+
+            if(data.poll != undefined) {
+                channel.messages.delete(data.id).then(() => console.log(`Poll deleted from ${data.author.username}`))
+                .catch(console.error);;
+            }
+        
+        })
     }
 
     private static MemberUpdate(): void {
