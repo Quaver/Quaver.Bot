@@ -145,35 +145,6 @@ export default class Bot {
 
     /**
      *
-     * Checks if string contains banned word
-     *
-     * @param text
-     * @constructor
-     * @private
-     */
-    private static VerifyMessageContent(text: string, embed: boolean = false): boolean {
-        const regex = /https?:\/\/(.*).gift/;
-        const bannedWords = [
-            "gifted", "nitro"
-        ];
-
-        if (text && embed) {
-            for (const word of bannedWords) {
-                if (text.includes(word)) return true;
-            }
-        }
-
-        // Verify .gift urls
-        if (text && text.includes("http") && regex.test(text)) {
-            const groups = regex.exec(text);
-            if(groups && groups[1] !== "discord") return true;
-        }
-
-        return false;
-    }
-
-    /**
-     *
      * Watch mee6 !mute and !tempmute commands and save duration and reason
      *
      * @param message
@@ -281,23 +252,6 @@ export default class Bot {
     }
 
     /**
-     *
-     *  Deleted message with custom text response
-     *
-     * @param message
-     * @param text
-     * @constructor
-     * @private
-     */
-    private static DeleteMessage(message: any, text: string = "message was deleted!"): void {
-        let msg = `<@${message.author.id}> ${text}`
-        message.delete().then(r => {
-            // @ts-ignore
-            Bot.Client.channels.cache.get(config.channels.logDeletedMessages).send(msg);
-        });
-    }
-
-    /**
      * On message
      */
     private static WatchMessages(): void {
@@ -306,28 +260,6 @@ export default class Bot {
             Bot.Mute(message);
             Bot.History(message);
         });
-
-        // Use raw to check if message is poll and delete it if they don't have manage_channel permission
-        Bot.Client.on('raw', async packet => {
-            if (!['MESSAGE_CREATE'].includes(packet.t)) return;
-
-            const { d: data } = packet;
-            const channel = Bot.Client.channels.cache.get(data.channel_id);
-            const guild = Bot.Client.guilds.cache.get(data.guild_id);
-
-            if (!channel || !guild) return;
-
-            const member = await guild.members.fetch(data.author.id);
-
-            if(this.HasPermission(member))
-                return;
-
-            if(data.poll != undefined) {
-                channel.messages.delete(data.id).then(() => console.log(`Poll deleted from ${data.author.username}`))
-                .catch(console.error);;
-            }
-        
-        })
     }
 
     private static MemberUpdate(): void {
